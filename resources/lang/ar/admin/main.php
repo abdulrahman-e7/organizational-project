@@ -824,6 +824,7 @@ return [
     'users_list' => 'المستخدمين',
     'user_or_instructor' => 'المستخدم او المعلم',
     'users' => 'المستخدمين',
+    'lead_user' => 'مشرف المجموعة',
     'classes' => 'الفصول',
     'class' => 'مقرر',
     'classes_sales' => 'مبيعات المقرر',

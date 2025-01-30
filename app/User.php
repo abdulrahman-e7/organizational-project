@@ -113,6 +113,11 @@ class User extends Authenticatable
         return $this->role_name === Role::$teacher;
     }
 
+    public function isOrg()
+    {
+        return $this->role_name === Role::$org;
+    }
+
     public function isOrganization()
     {
         return $this->role_name === Role::$organization;

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Group;
 use App\Models\GroupRegistrationPackage;
 use App\Models\GroupUser;
+use App\Models\OrganizationGroup;
 use App\User;
 use Illuminate\Http\Request;
 
@@ -15,20 +16,39 @@ class GroupController extends Controller
     {
         $this->authorize('admin_group_list');
 
-        $groups = Group::query();
-        $filters = $request->input('filters');
+        
+        if (auth()->user()->role->name === "org") {
+            $groups = OrganizationGroup::query();
+            $filters = $request->input('filters');
+    
+            if (isset($filters['group_name'])) {
+                $groups = $groups->where('name', 'like', '%' . $filters['group_name'] . '%');
+            }
+    
+            $data = [
+                'pageTitle' => trans('admin/pages/groups.group_list_page_title'),
+                'groups' => $groups->paginate(10),
+                'group_name' => $filters['group_name'] ?? '',
+            ];
+    
+            return view('admin.users.groups.org_group_lists', $data);
 
-        if (isset($filters['group_name'])) {
-            $groups = $groups->where('name', 'like', '%' . $filters['group_name'] . '%');
+        }else{
+            $groups = Group::query();
+            $filters = $request->input('filters');
+    
+            if (isset($filters['group_name'])) {
+                $groups = $groups->where('name', 'like', '%' . $filters['group_name'] . '%');
+            }
+    
+            $data = [
+                'pageTitle' => trans('admin/pages/groups.group_list_page_title'),
+                'groups' => $groups->paginate(10),
+                'group_name' => $filters['group_name'] ?? '',
+            ];
+    
+            return view('admin.users.groups.lists', $data);
         }
-
-        $data = [
-            'pageTitle' => trans('admin/pages/groups.group_list_page_title'),
-            'groups' => $groups->paginate(10),
-            'group_name' => $filters['group_name'] ?? '',
-        ];
-
-        return view('admin.users.groups.lists', $data);
     }
 
     public function create()
@@ -39,45 +59,49 @@ class GroupController extends Controller
             'pageTitle' => trans('admin/main.group_new_page_title'),
         ];
 
-        return view('admin.users.groups.new', $data);
+        return auth()->user()->role->name === "org" ? view('admin.users.groups.orgnew', $data) : view('admin.users.groups.new', $data);
     }
 
     public function store(Request $request)
     {
-        $this->authorize('admin_group_create');
+        $this->authorize('admin_group_create');        
+        
+        if (auth()->user()->role->name === "org") {
+            $group = OrganizationGroup::create($request->all());
+        }else{
+            $this->validate($request, [
+                'users' => 'array',
+                'name' => 'required',
+            ]);
+            
+            $data = $request->all();
+            $data['created_at'] = time();
+            $data['creator_id'] = auth()->user()->id;
+            unset($data['_token']);
 
-        $this->validate($request, [
-            'users' => 'array',
-            'name' => 'required',
-        ]);
-
-        $data = $request->all();
-        $data['created_at'] = time();
-        $data['creator_id'] = auth()->user()->id;
-        unset($data['_token']);
-
-        $group = Group::create($data);
-
-        $users = $request->input('users');
-
-        if (!empty($users)) {
-            foreach ($users as $userId) {
-                if (GroupUser::where('user_id', $userId)->first()) {
-                    continue;
+            $group = Group::create($data);
+            $users = $request->input('users');
+            
+            if (!empty($users)) {
+                foreach ($users as $userId) {
+                    if (GroupUser::where('user_id', $userId)->first()) {
+                        continue;
+                    }
+    
+                    GroupUser::create([
+                        'group_id' => $group->id,
+                        'user_id' => $userId,
+                        'created_at' => time(),
+                    ]);
+    
+                    $notifyOptions = [
+                        '[u.g.title]' => $group->name,
+                    ];
+                    sendNotification('change_user_group', $notifyOptions, $userId);
+                    sendNotification('add_to_user_group', $notifyOptions, $userId);
                 }
-
-                GroupUser::create([
-                    'group_id' => $group->id,
-                    'user_id' => $userId,
-                    'created_at' => time(),
-                ]);
-
-                $notifyOptions = [
-                    '[u.g.title]' => $group->name,
-                ];
-                sendNotification('change_user_group', $notifyOptions, $userId);
-                sendNotification('add_to_user_group', $notifyOptions, $userId);
             }
+
         }
 
         return redirect(getAdminPanelUrl() . '/users/groups');

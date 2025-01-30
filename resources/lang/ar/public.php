@@ -90,6 +90,7 @@ return [
     'search' => 'يبحث',
     'search_instructor' => 'ابحث عن اسم المعلم أو البريد الإلكتروني أو الهاتف',
     'search_user' => 'مستخدم البحث',
+    'leader_id' => 'اسم مشرف المجموعة',
     'tags' => 'العلامات',
     'type_tag_name_and_press_enter' => 'اكتب اسم العلامة واضغط على إدخال',
     'moderator_password' => 'كلمة مرور الوسيط',

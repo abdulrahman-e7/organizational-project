@@ -12,6 +12,7 @@ class Role extends Model
     static $registered_user = 'registered_user';
     static $teacher = 'teacher';
     static $organization = 'organization';
+    static $org = 'org';
 
     protected $guarded = ['id'];
 
@@ -26,6 +27,7 @@ class Role extends Model
             case self::$user:
             case self::$registered_user:
             case self::$organization:
+            case self::$org:
             case self::$teacher:
                 return false;
                 break;

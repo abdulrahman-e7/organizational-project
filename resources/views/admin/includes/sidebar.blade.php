@@ -688,7 +688,7 @@
             @can('admin_users')
                 <li
                     class="nav-item dropdown {{ (request()->is(getAdminPanelUrl('/staffs', false)) or request()->is(getAdminPanelUrl('/students', false)) or request()->is(getAdminPanelUrl('/instructors', false)) or request()->is(getAdminPanelUrl('/organizations', false))) ? 'active' : '' }}">
-                    @if (auth()->user()->role_name == 'admin')
+                    @if (auth()->user()->role_name == 'admin' || auth()->user()->role_name == 'org')
                         <a href="#" class="nav-link has-dropdown" data-toggle="dropdown">
                             <i class="fas fa-users"></i>
                             <span>{{ trans('admin/main.users_list') }}</span>
@@ -728,6 +728,11 @@
                                 <a class="nav-link"
                                     href="{{ getAdminPanelUrl() }}/users/create">{{ trans('admin/main.new') }}</a>
                             </li>
+                        @endcan()
+
+                        
+                        @can('org_groups_create')
+                            <li> teste </li>
                         @endcan()
                     </ul>
                 </li>
